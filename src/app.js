@@ -3,6 +3,7 @@ const cors = require("cors");
 const helmet = require("helmet");
 const morgan = require("morgan");
 const authRoutes = require("./routes/authRoutes");
+const assignmentRoutes = require("./routes/assignmentRoutes");
 
 require("dotenv").config();
 
@@ -29,6 +30,10 @@ console.log("🔍 Starting route registration...");
 console.log("✅ API Yükleniyor...");
 console.log("📌 Auth Routes Eklendi: /api/auth");
 app.use("/api/auth", authRoutes);
+<<<<<<< HEAD
+=======
+app.use("/api/assignments", assignmentRoutes);
+>>>>>>> 474de91 (Cursora gidecek)
 console.log("✅ Auth Routes registered at: /api/auth");
 
 // Add this after routes are registered
