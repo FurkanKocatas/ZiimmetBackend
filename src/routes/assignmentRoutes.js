@@ -1,8 +1,9 @@
 const express = require("express");
 const Assignment = require("../models/Assignment");
-const authMiddleware = require("../middleware/authMiddleware");
+const { authMiddleware, adminMiddleware } = require("../middleware/authMiddleware");
 
 const router = express.Router();
+
 
 // ✅ Tüm zimmetleri listeleme
 router.get("/", async (req, res) => {
@@ -67,10 +68,11 @@ router.get("/user/:userId", async (req, res) => {
   }
 });
 // ✅ Zimmet ekleme (Sadece giriş yapmış kullanıcılar)
-router.post("/", authMiddleware, async (req, res) => {
+router.post("/", authMiddleware, adminMiddleware, async (req, res) => {
   try {
     // ❌ Eğer kullanıcı admin değilse, erişimi engelle
     if (req.user.role !== "admin") {
+
       return res.status(403).json({ message: "Sadece adminler zimmet ekleyebilir." });
     }
 
@@ -82,6 +84,22 @@ router.post("/", authMiddleware, async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 });
+router.post("/", async (req, res) => {
+  try {
+    const { itemId, returnDate } = req.body;
+
+    const assignment = await Assignment.create({
+      item: itemId,
+      user: req.user.id,
+      returnDate
+    });
+
+    res.status(201).json(assignment);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 
 
   

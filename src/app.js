@@ -11,7 +11,7 @@ const app = express();
 
 // Middleware'ler
 app.use(express.json()); // JSON formatını okumayı etkinleştir
-app.use(cors({ origin: "*" }));
+app.use(cors({ origin: "http://localhost:3000", credentials: true }));
 app.use(helmet());
 app.use(morgan("dev"));
 

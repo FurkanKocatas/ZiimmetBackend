@@ -1,5 +1,6 @@
 const jwt = require("jsonwebtoken");
 
+// **Kullanıcı Yetkilendirme Middleware**
 const authMiddleware = (req, res, next) => {
   const token = req.header("Authorization");
 
@@ -17,4 +18,16 @@ const authMiddleware = (req, res, next) => {
   }
 };
 
-module.exports = authMiddleware;
+// **Sadece Adminlerin Erişebileceği Middleware**
+const adminMiddleware = (req, res, next) => {
+  if (!req.user) {
+    return res.status(401).json({ message: "Yetkilendirme reddedildi." });
+  }
+
+  if (req.user.role !== "admin") {
+    return res.status(403).json({ message: "Bu işlemi yapmak için yetkiniz yok!" });
+  }
+  next();
+};
+
+module.exports = { authMiddleware, adminMiddleware };
