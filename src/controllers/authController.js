@@ -7,37 +7,34 @@ const axios = require("axios");
 // Harici API'den giriş yapma (Single Sign-On - SSO)
 const externalLogin = async (req, res) => {
   try {
-    const { externalToken } = req.body; // Harici API'den gelen token
+    const { name, email, externalId } = req.body;
 
-    if (!externalToken) {
-      return res.status(400).json({ message: "Harici token gereklidir." });
+    if (!email || !name || !externalId) {
+      return res.status(400).json({ message: 'All fields are required' });
     }
 
-    // Harici API'ye gidip kullanıcı bilgilerini alıyoruz
-    const response = await axios.get("https://external-api.com/user", {
-      headers: { Authorization: `Bearer ${externalToken}` }
-    });
-
-    const { name, email } = response.data;
-
-    // Kullanıcı veritabanında kayıtlı mı kontrol et
+    // Find or create user
     let user = await User.findOne({ email });
-
+    
     if (!user) {
       user = await User.create({
         name,
         email,
-        password: "", // Harici kullanıcılar için şifre saklamıyoruz
-        role: "user" // Varsayılan olarak "user" olarak ekliyoruz
+        externalId,
+        role: 'user',
+        approved: true // Auto-approve external users
       });
     }
 
-    // JWT token oluştur
-    const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: "7d" });
+    const token = jwt.sign(
+      { id: user._id, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: '24h' }
+    );
 
     res.status(200).json({ token, user });
   } catch (error) {
-    res.status(500).json({ message: "Harici kimlik doğrulama başarısız!" });
+    res.status(500).json({ message: error.message });
   }
 };
 
@@ -84,29 +81,53 @@ const register = async (req, res) => {
 // Giriş Yap (Login)
 const login = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    console.log('👉 Login attempt received:', req.body);
 
-    if (!email || !password) {
-      return res.status(400).json({ message: "E-posta ve şifre zorunludur." });
+    const { email, name } = req.body;
+
+    // Validate input
+    if (!email || !name) {
+      console.log('❌ Missing email or name');
+      return res.status(400).json({ message: 'Please provide email and name' });
     }
 
-    const user = await User.findOne({ email });
+    // Find user by email and name
+    console.log('🔍 Searching for user:', { email, name });
+    const user = await User.findOne({ email, name });
+    console.log('User found:', user ? '✅ Yes' : '❌ No');
 
-    if (!user || !(await bcrypt.compare(password, user.password))) {
-      return res.status(401).json({ message: "Geçersiz e-posta veya şifre." });
+    if (!user) {
+      return res.status(401).json({ message: 'Invalid credentials' });
     }
 
-    res.status(200).json({
-      token: generateToken(user),
+    // Create token
+    console.log('🔑 Creating token for user:', user._id);
+    const token = jwt.sign(
+      { id: user._id, role: user.role },
+      process.env.JWT_SECRET || 'your-secret-key',
+      { expiresIn: '1d' }
+    );
+
+    // Send response
+    const response = {
+      token,
       user: {
         _id: user._id,
         name: user.name,
         email: user.email,
-        role: user.role,
-      },
-    });
+        role: user.role
+      }
+    };
+    console.log('✅ Login successful, sending response');
+    res.json(response);
+
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error('❌ Login error:', error);
+    console.error('Stack trace:', error.stack);
+    res.status(500).json({ 
+      message: 'Server error during login',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 };
 

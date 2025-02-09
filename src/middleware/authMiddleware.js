@@ -1,33 +1,39 @@
-const jwt = require("jsonwebtoken");
+const jwt = require('jsonwebtoken');
+const User = require('../models/User');
 
-// **Kullanıcı Yetkilendirme Middleware**
-const authMiddleware = (req, res, next) => {
-  const token = req.header("Authorization");
-
-  if (!token) {
-    return res.status(401).json({ message: "Yetkilendirme reddedildi, token eksik." });
-  }
-
+const protect = async (req, res, next) => {
   try {
-    // "Bearer ..." formatındaki token'ı temizle
-    const decoded = jwt.verify(token.replace("Bearer ", ""), process.env.JWT_SECRET);
-    req.user = decoded; // Kullanıcı bilgilerini `req.user` içine koy
+    // Get token from header
+    const token = req.header('Authorization')?.replace('Bearer ', '');
+
+    if (!token) {
+      return res.status(401).json({ message: 'No token, authorization denied' });
+    }
+
+    // Verify token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    
+    // Get user from token
+    const user = await User.findById(decoded.id).select('-password');
+    
+    if (!user) {
+      return res.status(401).json({ message: 'User not found' });
+    }
+
+    req.user = user;
     next();
   } catch (error) {
-    res.status(401).json({ message: "Geçersiz token" });
+    res.status(401).json({ message: 'Token is not valid' });
   }
 };
 
-// **Sadece Adminlerin Erişebileceği Middleware**
-const adminMiddleware = (req, res, next) => {
-  if (!req.user) {
-    return res.status(401).json({ message: "Yetkilendirme reddedildi." });
+// Middleware for admin-only routes
+const adminOnly = (req, res, next) => {
+  if (req.user && req.user.role === 'admin') {
+    next();
+  } else {
+    res.status(403).json({ message: 'Admin access required' });
   }
-
-  if (req.user.role !== "admin") {
-    return res.status(403).json({ message: "Bu işlemi yapmak için yetkiniz yok!" });
-  }
-  next();
 };
 
-module.exports = { authMiddleware, adminMiddleware };
+module.exports = { protect, adminOnly };

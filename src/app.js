@@ -3,15 +3,25 @@ const cors = require("cors");
 const helmet = require("helmet");
 const morgan = require("morgan");
 const authRoutes = require("./routes/authRoutes");
-const assignmentRoutes = require("./routes/assignmentRoutes");
-
+const userRoutes = require("./routes/userRoutes");
+const adminRoutes = require("./routes/adminRoutes");
+const connectDB = require("./config/db");
 require("dotenv").config();
 
 const app = express();
 
-// Middleware'ler
+// CORS configuration
+const corsOptions = {
+  origin: process.env.NODE_ENV === 'production'
+    ? ['https://your-domain.com']
+    : ['http://localhost:3000', 'http://localhost:5173'],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+};
+
 app.use(express.json()); // JSON formatını okumayı etkinleştir
-app.use(cors({ origin: "http://localhost:3000", credentials: true }));
+app.use(cors(corsOptions));
 app.use(helmet());
 app.use(morgan("dev"));
 
@@ -30,7 +40,8 @@ console.log("🔍 Starting route registration...");
 console.log("✅ API Yükleniyor...");
 console.log("📌 Auth Routes Eklendi: /api/auth");
 app.use("/api/auth", authRoutes);
-app.use("/api/assignments", assignmentRoutes);
+app.use("/api/user", userRoutes);
+app.use("/api/admin", adminRoutes);
 console.log("✅ Auth Routes registered at: /api/auth");
 
 // Add this after routes are registered

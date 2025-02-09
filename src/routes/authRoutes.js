@@ -1,12 +1,11 @@
-const express = require("express");
-const { register, login,externalLogin } = require("../controllers/authController");
-
+const express = require('express');
 const router = express.Router();
+const { login, register } = require('../controllers/authController');
 
-console.log("🛠️ authRoutes dosyası çalışıyor!");
+// Login route
+router.post('/login', login);
 
-router.post("/register", register);
-router.post("/login", login);
-router.post("/external-login", externalLogin);
+// Register route (if you have one)
+router.post('/register', register);
 
 module.exports = router;

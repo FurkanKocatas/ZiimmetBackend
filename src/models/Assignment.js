@@ -1,14 +1,34 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
-const AssignmentSchema = new mongoose.Schema(
-  {
-    itemName: { type: String, required: true },
-    assignedTo: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true }, // ✅ Burayı ekledik!
-    returnDate: { type: Date, required: true },
-    status: { type: String, enum: ["active", "returned"], default: "active" },
+const assignmentSchema = new mongoose.Schema({
+  device: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Device',
+    required: true
   },
-  { timestamps: true }
-);
+  assignedTo: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
+  assignedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
+  assignedDate: {
+    type: Date,
+    default: Date.now
+  },
+  returnDate: {
+    type: Date,
+    default: null
+  },
+  status: {
+    type: String,
+    enum: ['active', 'returned'],
+    default: 'active'
+  }
+});
 
-const Assignment = mongoose.model("Assignment", AssignmentSchema);
-module.exports = Assignment;
+module.exports = mongoose.model('Assignment', assignmentSchema);
