@@ -4,18 +4,6 @@ const authMiddleware = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
-// ✅ Zimmet ekleme
-router.post("/", async (req, res) => {
-  try {
-    const { itemName, assignedTo, returnDate } = req.body;
-    const newAssignment = new Assignment({ itemName, assignedTo, returnDate });
-    await newAssignment.save();
-    res.status(201).json(newAssignment);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-});
-
 // ✅ Tüm zimmetleri listeleme
 router.get("/", async (req, res) => {
   try {
@@ -80,19 +68,22 @@ router.get("/user/:userId", async (req, res) => {
 });
 // ✅ Zimmet ekleme (Sadece giriş yapmış kullanıcılar)
 router.post("/", authMiddleware, async (req, res) => {
-    try {
-      console.log("✅ Kullanıcı:", req.user); // Debug log
-  
-      const { itemName, returnDate } = req.body;
-      const newAssignment = new Assignment({ itemName, assignedTo: req.user.id, returnDate });
-  
-      await newAssignment.save();
-      res.status(201).json(newAssignment);
-    } catch (error) {
-      console.error("❌ Hata:", error); // Hata logu ekle
-      res.status(500).json({ message: error.message });
+  try {
+    // ❌ Eğer kullanıcı admin değilse, erişimi engelle
+    if (req.user.role !== "admin") {
+      return res.status(403).json({ message: "Sadece adminler zimmet ekleyebilir." });
     }
-  });
+
+    const { itemName, returnDate } = req.body;
+    const newAssignment = new Assignment({ itemName, assignedTo: req.user.id, returnDate });
+    await newAssignment.save();
+    res.status(201).json(newAssignment);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+
   
   
   

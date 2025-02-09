@@ -11,7 +11,7 @@ const app = express();
 
 // Middleware'ler
 app.use(express.json()); // JSON formatını okumayı etkinleştir
-app.use(cors());
+app.use(cors({ origin: "*" }));
 app.use(helmet());
 app.use(morgan("dev"));
 
@@ -30,10 +30,7 @@ console.log("🔍 Starting route registration...");
 console.log("✅ API Yükleniyor...");
 console.log("📌 Auth Routes Eklendi: /api/auth");
 app.use("/api/auth", authRoutes);
-<<<<<<< HEAD
-=======
 app.use("/api/assignments", assignmentRoutes);
->>>>>>> 474de91 (Cursora gidecek)
 console.log("✅ Auth Routes registered at: /api/auth");
 
 // Add this after routes are registered
@@ -56,6 +53,7 @@ app._router.stack.forEach((middleware) => {
 app.get("/", (req, res) => {
   res.send("Zimmet Backend Çalışıyor!");
 });
+
 
 module.exports = app;
 app._router.stack.forEach((r) => {
